@@ -7,24 +7,24 @@ import platform
 import re
 import sys
 import subprocess
+import xml.etree.ElementTree as ET
 
 from functools import partial
 from collections import defaultdict
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ImportError:
-    # needed for py3+qt4
-    # Ref:
-    # http://pyqt.sourceforge.net/Docs/PyQt4/incompatible_apis.html
-    # http://stackoverflow.com/questions/21217399/pyqt4-qtcore-qvariant-object-instead-of-a-string
-    if sys.version_info.major >= 3:
-        import sip
-        sip.setapi('QVariant', 2)
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+# except ImportError:
+#     # needed for py3+qt4
+#     # Ref:
+#     # http://pyqt.sourceforge.net/Docs/PyQt4/incompatible_apis.html
+#     # http://stackoverflow.com/questions/21217399/pyqt4-qtcore-qvariant-object-instead-of-a-string
+#     if sys.version_info.major >= 3:
+#         import sip
+#         sip.setapi('QVariant', 2)
+#     # from PyQt4.QtGui import *
+#     # from PyQt4.QtCore import *
 
 import resources
 # Add internal libs
@@ -422,6 +422,10 @@ class MainWindow(QMainWindow, WindowMixin):
         # Add Chris
         self.difficult = False
 
+        # Ravindra Kompella --> Changes to accomodate carry forward of bounding box from previous frame
+        self.prevFileName = ""
+        self.fileSavedCount = 0
+
         ## Fix the compatible issue for qt4 and qt5. Convert the QStringList to python list
         if settings.get(SETTING_RECENT_FILES):
             if have_qstring():
@@ -783,6 +787,11 @@ class MainWindow(QMainWindow, WindowMixin):
                 print ('Img: ' + self.filePath + ' -> Its xml: ' + annotationFilePath)
                 self.labelFile.savePascalVocFormat(annotationFilePath, shapes, self.filePath, self.imageData,
                                                    self.lineColor.getRgb(), self.fillColor.getRgb())
+                # Ravindra --> Increment the file count. THis will help to check if the next read file is not the first file.
+                self.fileSavedCount += 1
+                # Ravindra --> Set the previous filename for which the XML has been found. Use this to open Next Image when xml has not been found
+                self.prevFileName = annotationFilePath
+
             elif self.usingYoloFormat is True:
                 if annotationFilePath[-4:] != ".txt":
                     annotationFilePath += TXT_EXT
@@ -1015,8 +1024,18 @@ class MainWindow(QMainWindow, WindowMixin):
                 """
                 if os.path.isfile(xmlPath):
                     self.loadPascalXMLByFilename(xmlPath)
+                    #Ravindra --> Incase there are few existing XML files and previous file is read even then increment the fileSavedCount so that it can be picked up for next image if no save happens before
+                    self.prevFileName = xmlPath
+                    self.fileSavedCount += 1
                 elif os.path.isfile(txtPath):
                     self.loadYOLOTXTByFilename(txtPath)
+                elif self.fileSavedCount != 0: # Ravindra --> Use this below condition if atleast one file has been read previously to be extended for the next frame
+                # Ravindra --> read the previously saved xml file and carry it forward to the new image if xmlPath is not found
+                    tree = ET.parse(self.prevFileName)
+                    tree.find('filename').text = basename + ".png"
+                    tree.find("path").text = xmlPath[:-4] + ".png"
+                    tree.write(xmlPath) # xmlPath holds the current xml path for the current image
+                    self.loadPascalXMLByFilename(xmlPath)
             else:
                 xmlPath = os.path.splitext(filePath)[0] + XML_EXT
                 txtPath = os.path.splitext(filePath)[0] + TXT_EXT
