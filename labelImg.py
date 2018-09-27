@@ -28,7 +28,6 @@ except ImportError:
     from PyQt4.QtCore import *
 
 import resources
-# Add internal libs
 from libs.constants import *
 from libs.lib import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText
 from libs.settings import Settings
@@ -365,6 +364,17 @@ class MainWindow(QMainWindow, WindowMixin):
         self.autoSaving = QAction("Auto Saving", self)
         self.autoSaving.setCheckable(True)
         self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, False))
+
+        # Propagate auto correction : Enable propagating bounding box of current image to next image if pressing next
+        self.propBoundingBox = QAction("Propagate BoundingBox to next image", self)
+        self.propBoundingBox.setCheckable(True)
+        self.propBoundingBox.setChecked(settings.get(SETTING_PROP_BB, False))
+
+        # Propagate auto correction : Enable propagating auto correction of current image to next image if pressing next
+        self.propCorrection = QAction("Propagate corrected BB to next image- Used in review process", self)
+        self.propCorrection.setCheckable(True)
+        self.propCorrection.setChecked(settings.get(SETTING_PROP_CORRECTION, False))
+
         # Sync single class mode from PR#106
         self.singleClassMode = QAction("Single Class Mode", self)
         self.singleClassMode.setShortcut("Ctrl+Shift+S")
@@ -383,6 +393,8 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.help, (help, showInfo))
         addActions(self.menus.view, (
             self.autoSaving,
+            self.propBoundingBox,
+            self.propCorrection,
             self.singleClassMode,
             self.paintLabelsOption,
             labels, advancedMode, None,
@@ -1024,13 +1036,22 @@ class MainWindow(QMainWindow, WindowMixin):
                 PascalXML > YOLO
                 """
                 if os.path.isfile(xmlPath):
-                    self.loadPascalXMLByFilename(xmlPath)
-                    #Ravindra --> Incase there are few existing XML files and previous file is read even then increment the fileSavedCount so that it can be picked up for next image if no save happens before
-                    self.prevFileName = xmlPath
-                    self.fileSavedCount += 1
+                    # #Ravindra --> Incase there are few existing XML files and previous file is read even then increment the fileSavedCount so that it can be picked up for next image if no save happens before
+                    # self.prevFileName = xmlPath
+                    # self.fileSavedCount += 1
+                    # Ravindra --> Propagate correction from previously updated image
+                    if self.propCorrection.isChecked() and len(self.prevFileName) > 0:
+                    # Ravindra --> read the previously saved xml file and carry it forward to the new image if xmlPath is not found
+                        tree = ET.parse(self.prevFileName)
+                        tree.find('filename').text = basename + ".png"
+                        tree.find("path").text = xmlPath[:-4] + ".png"
+                        tree.write(xmlPath) # xmlPath holds the current xml path for the current image
+                        self.loadPascalXMLByFilename(xmlPath)
+                    else: # If propagate correction is not checked
+                        self.loadPascalXMLByFilename(xmlPath)
                 elif os.path.isfile(txtPath):
                     self.loadYOLOTXTByFilename(txtPath)
-                elif self.fileSavedCount != 0: # Ravindra --> Use this below condition if atleast one file has been read previously to be extended for the next frame
+                elif self.propBoundingBox.isChecked() and self.fileSavedCount != 0: # Ravindra --> Use this below condition if atleast one file has been read previously to be extended for the next frame
                 # Ravindra --> read the previously saved xml file and carry it forward to the new image if xmlPath is not found
                     tree = ET.parse(self.prevFileName)
                     tree.find('filename').text = basename + ".png"
@@ -1048,7 +1069,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.setWindowTitle(__appname__ + ' ' + filePath)
 
             # Default : select last item if there is at least one item
-            if self.labelList.count():
+            if self.labelList.count() and not (self.propCorrection.isChecked() and self.propBoundingBox.isChecked()):
                 self.labelList.setCurrentItem(self.labelList.item(self.labelList.count()-1))
                 self.labelList.item(self.labelList.count()-1).setSelected(True)
 
@@ -1117,6 +1138,8 @@ class MainWindow(QMainWindow, WindowMixin):
             settings[SETTING_LAST_OPEN_DIR] = ""
 
         settings[SETTING_AUTO_SAVE] = self.autoSaving.isChecked()
+        settings[SETTING_PROP_BB] = False
+        settings[SETTING_PROP_CORRECTION] = False
         settings[SETTING_SINGLE_CLASS] = self.singleClassMode.isChecked()
         settings[SETTING_PAINT_LABEL] = self.paintLabelsOption.isChecked()
         settings.save()
@@ -1155,6 +1178,15 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().showMessage('%s . Annotation will be saved to %s' %
                                      ('Change saved folder', self.defaultSaveDir))
         self.statusBar().show()
+
+        # Ravindra --> To show up the annotation on the first image - reload the targetDir images folder again
+        if self.lastOpenDir and os.path.exists(self.lastOpenDir):
+            defaultOpenDirPath = self.lastOpenDir
+        else:
+            defaultOpenDirPath = os.path.dirname(self.filePath) if self.filePath else '.'
+
+        self.importDirImages(defaultOpenDirPath)
+        # Ravindra --> End changes ( The above changes are copied from openDirDialog function)
 
     def openAnnotationDialog(self, _value=False):
         if self.filePath is None:
@@ -1196,6 +1228,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.filePath = None
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
+
+        # Ravindra --> Whenever we import a fresh set of images from a directory, reset all the propagation properties.
+        self.propBoundingBox.setChecked(self.settings.get(SETTING_PROP_BB, False))
+        self.propCorrection.setChecked(self.settings.get(SETTING_PROP_CORRECTION, False))
+        self.prevFileName = ""
+        self.fileSavedCount = 0
+        # Ravindra --> End change
+
         self.openNextImg()
         for imgPath in self.mImgList:
             item = QListWidgetItem(imgPath)
