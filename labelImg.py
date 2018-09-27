@@ -1069,7 +1069,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.setWindowTitle(__appname__ + ' ' + filePath)
 
             # Default : select last item if there is at least one item
-            if self.labelList.count() and not (self.propCorrection.isChecked() and self.propBoundingBox.isChecked()):
+            if self.labelList.count() and not (self.propCorrection.isChecked() or self.propBoundingBox.isChecked()):
                 self.labelList.setCurrentItem(self.labelList.item(self.labelList.count()-1))
                 self.labelList.item(self.labelList.count()-1).setSelected(True)
 
