@@ -9,7 +9,6 @@ except ImportError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
-
 def newIcon(icon):
     return QIcon(':/' + icon)
 
@@ -80,4 +79,4 @@ def generateColorByText(text):
     r = int((hashCode / 255) % 255)
     g = int((hashCode / 65025)  % 255)
     b = int((hashCode / 16581375)  % 255)
-    return QColor(r, g, b, 100)
+    return QColor(r, g, b, 255) # Ravindra --> Change the alpha channel to 255 for opaqueness
