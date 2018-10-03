@@ -29,7 +29,7 @@ except ImportError:
 
 import resources
 from libs.constants import *
-from libs.lib import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText
+from libs.lib import struct, newAction, newIcon, addActions, fmtShortcut, generateColorByText, generateColorFillByText
 from libs.settings import Settings
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.canvas import Canvas
@@ -365,12 +365,12 @@ class MainWindow(QMainWindow, WindowMixin):
         self.autoSaving.setCheckable(True)
         self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, False))
 
-        # Propagate auto correction : Enable propagating bounding box of current image to next image if pressing next
+        # Ravindra --> Propagate auto correction : Enable propagating bounding box of current image to next image if pressing next
         self.propBoundingBox = QAction("Propagate BoundingBox to next image", self)
         self.propBoundingBox.setCheckable(True)
         self.propBoundingBox.setChecked(settings.get(SETTING_PROP_BB, False))
 
-        # Propagate auto correction : Enable propagating auto correction of current image to next image if pressing next
+        # Ravindra --> Propagate auto correction : Enable propagating auto correction of current image to next image if pressing next
         self.propCorrection = QAction("Propagate corrected BB to next image- Used in review process", self)
         self.propCorrection.setCheckable(True)
         self.propCorrection.setChecked(settings.get(SETTING_PROP_CORRECTION, False))
@@ -771,7 +771,7 @@ class MainWindow(QMainWindow, WindowMixin):
             if fill_color:
                 shape.fill_color = QColor(*fill_color)
             else:
-                shape.fill_color = generateColorByText(label)
+                shape.fill_color = generateColorFillByText(label)
 
             self.addLabel(shape)
 
