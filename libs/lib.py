@@ -80,3 +80,11 @@ def generateColorByText(text):
     g = int((hashCode / 65025)  % 255)
     b = int((hashCode / 16581375)  % 255)
     return QColor(r, g, b, 255) # Ravindra --> Change the alpha channel to 255 for opaqueness
+
+def generateColorFillByText(text):
+    s = str(ustr(text))
+    hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
+    r = int((hashCode / 255) % 255)
+    g = int((hashCode / 65025)  % 255)
+    b = int((hashCode / 16581375)  % 255)
+    return QColor(r, g, b, 125) # Ravindra --> Change the alpha channel to 255 for opaqueness

@@ -12,9 +12,9 @@ import sys
 
 # Ravindra --> Changed few default color to be completely opaque or more transparent
 DEFAULT_LINE_COLOR = QColor(0, 255, 0, 255) #
-DEFAULT_FILL_COLOR = QColor(255, 0, 0, 100)
+DEFAULT_FILL_COLOR = QColor(255, 0, 0, 255)
 DEFAULT_SELECT_LINE_COLOR = QColor(255, 255, 255)
-DEFAULT_SELECT_FILL_COLOR = QColor(0, 128, 255, 50)
+DEFAULT_SELECT_FILL_COLOR = QColor(0, 128, 255, 150)
 DEFAULT_VERTEX_FILL_COLOR = QColor(0, 255, 0, 255)
 DEFAULT_HVERTEX_FILL_COLOR = QColor(255, 0, 0)
 MIN_Y_LABEL = 10

@@ -411,7 +411,7 @@ class Canvas(QWidget):
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and self.isVisible(shape):
                 # Ravindra --> removing the transparent fill of the bounding box as it is distracting
-                # shape.fill = shape.selected or shape == self.hShape
+                shape.fill = shape.selected or shape == self.hShape
                 shape.paint(p)
         if self.current:
             self.current.paint(p)
