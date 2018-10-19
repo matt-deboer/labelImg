@@ -67,7 +67,12 @@ class LabelDialog(QDialog):
         self.edit.setSelection(0, len(text))
         self.edit.setFocus(Qt.PopupFocusReason)
         if move:
-            self.move(QCursor.pos())
+            screenShape = QDesktopWidget().screenGeometry()
+            newPoint = QPoint(QCursor.pos().x(), QCursor.pos().y())
+            if QCursor.pos().y() > screenShape.height()-screenShape.height()*0.30 :
+                new_y = screenShape.height()-screenShape.height()*0.40
+                newPoint = QPoint(QCursor.pos().x(), new_y)
+            self.move(newPoint)
         return self.edit.text() if self.exec_() else None
 
     def listItemClick(self, tQListWidgetItem):
