@@ -5,6 +5,8 @@ resources.py
 .idea*
 labelImg.egg-info*
 
+.history/
+
 *.pyc
 .*.swp
 
