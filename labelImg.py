@@ -264,6 +264,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
         create = action('Create\nRectBox', self.createShape,
                         'w', 'new', u'Draw a new Box', enabled=False)
+
+        createRo = action('Create\nRotatedRBox', self.createRoShape,
+                        'e', 'newRo', u'Draw a new RotatedRBox', enabled=False)
+
         delete = action('Delete\nRectBox', self.deleteSelectedShape,
                         'Delete', 'delete', u'Delete', enabled=False)
         copy = action('&Duplicate\nRectBox', self.copySelectedShape,
@@ -339,8 +343,9 @@ class MainWindow(QMainWindow, WindowMixin):
             self.popLabelListMenu)
 
         # Store actions for further handling.
-        self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, resetAll = resetAll,
-                              lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
+        self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close, 
+                              resetAll = resetAll,
+                              lineColor=color1, create=create, createRo=createRo, delete=delete, edit=edit, copy=copy,
                               createMode=createMode, editMode=editMode, advancedMode=advancedMode,
                               shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
                               zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
@@ -435,7 +440,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, createRo, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth, None, propagateToNextImg, propagateToPrevImg)
 
         self.actions.advanced = (
@@ -585,6 +590,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dirty = False
         self.actions.save.setEnabled(False)
         self.actions.create.setEnabled(True)
+        self.actions.createRo.setEnabled(True)
 
     def toggleActions(self, value=True):
         """Enable/Disable widgets which depend on an opened image."""
